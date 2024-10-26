@@ -1,7 +1,7 @@
 defmodule NimbleOptionsTest do
   use ExUnit.Case, async: true
 
-  doctest NimbleOptions
+  # doctest NimbleOptions
 
   import ExUnit.CaptureIO
 

@@ -1,93 +1,99 @@
+# keys: [
+#   type: :keyword_list,
+#   doc: """
+#   Available for types `:keyword_list`, `:non_empty_keyword_list`, and `:map`,
+#   it defines which set of keys are accepted for the option item. The value of the
+#   `:keys` option is a schema itself. For example: `keys: [foo: [type: :atom]]`.
+#   Use `:*` as the key to allow multiple arbitrary keys and specify their schema:
+#   `keys: [*: [type: :integer]]`.
+#   """,
+#   keys: &__MODULE__.options_schema/0
+# ],
+
 defmodule NimbleOptions do
+  alias NimbleOptions.Types
+  alias NimbleOptions.ValidationError
+
   @options_schema [
-    *: [
-      type: :keyword_list,
-      keys: [
-        type: [
-          type: {:custom, __MODULE__, :validate_type, []},
-          default: :any,
-          doc: "The type of the option item."
-        ],
-        required: [
-          type: :boolean,
-          default: false,
-          doc: "Defines if the option item is required."
-        ],
-        default: [
-          type: :any,
-          doc: """
-          The default value for the option item if that option is not specified. This value
-          is *validated* according to the given `:type`. This means that you cannot
-          have, for example, `type: :integer` and use `default: "a string"`.
-          """
-        ],
-        keys: [
-          type: :keyword_list,
-          doc: """
-          Available for types `:keyword_list`, `:non_empty_keyword_list`, and `:map`,
-          it defines which set of keys are accepted for the option item. The value of the
-          `:keys` option is a schema itself. For example: `keys: [foo: [type: :atom]]`.
-          Use `:*` as the key to allow multiple arbitrary keys and specify their schema:
-          `keys: [*: [type: :integer]]`.
-          """,
-          keys: &__MODULE__.options_schema/0
-        ],
-        deprecated: [
-          type: :string,
-          doc: """
-          Defines a message to indicate that the option item is deprecated. \
-          The message will be displayed as a warning when passing the item.
-          """
-        ],
-        doc: [
-          type: {:or, [:string, {:in, [false]}]},
-          type_doc: "`t:String.t/0` or `false`",
-          doc: "The documentation for the option item."
-        ],
-        subsection: [
-          type: :string,
-          doc: "The title of separate subsection of the options' documentation"
-        ],
-        type_doc: [
-          type: {:or, [:string, {:in, [false]}]},
-          type_doc: "`t:String.t/0` or `false`",
-          doc: """
-          The type doc to use *in the documentation* for the option item. If `false`,
-          no type documentation is added to the item. If it's a string, it can be
-          anything. For example, you can use `"a list of PIDs"`, or you can use
-          a typespec reference that ExDoc can link to the type definition, such as
-          `` "`t:binary/0`" ``. You can use Markdown in this documentation. If the
-          `:type_doc` option is not present, NimbleOptions tries to produce a type
-          documentation automatically if it can do it unambiguously. For example,
-          if `type: :integer`, NimbleOptions will use `t:integer/0` as the
-          auto-generated type doc.
-          """
-        ],
-        type_spec: [
-          type: :any,
-          type_doc: "`t:Macro.t/0`",
-          doc: """
-          The quoted spec to use *in the typespec* for the option item. You should use this
-          when the auto-generated spec is not specific enough. For example, if you are performing
-          custom validation on an option (with the `{:custom, ...}` type), then the
-          generated type spec for that option will always be `t:term/0`, but you can use
-          this option to customize that. The value for this option **must** be a quoted Elixir
-          term. For example, if you have an `:exception` option that is validated with a
-          `{:custom, ...}` type (based on `is_exception/1`), you can override the type
-          spec for that option to be `quote(do: Exception.t())`. *Available since v1.1.0*.
-          """
-        ],
-        redact: [
-          default: false,
-          type: :boolean,
-          doc: """
-          Ensures that sensitive information is not included in error messages and hides any
-          sensitive values when inspecting the `NimbleOptions.ValidationError` struct.
-          *Available since v1.2.0*.
-          """
-        ]
-      ]
-    ]
+    {:*,
+     [
+       type:
+         {:keyword_list,
+          [
+            type: [
+              type: {:custom, Types, :validate_type, []},
+              default: :any,
+              doc: "The type of the option item."
+            ],
+            required: [
+              type: :boolean,
+              default: false,
+              doc: "Defines if the option item is required."
+            ],
+            default: [
+              type: :any,
+              doc: """
+              The default value for the option item if that option is not specified. This value
+              is *validated* according to the given `:type`. This means that you cannot
+              have, for example, `type: :integer` and use `default: "a string"`.
+              """
+            ],
+            redact: [
+              default: false,
+              type: :boolean,
+              doc: """
+              Ensures that sensitive information is not included in error messages and hides any
+              sensitive values when inspecting the `NimbleOptions.ValidationError` struct.
+              *Available since v1.2.0*.
+              """
+            ],
+            deprecated: [
+              type: :string,
+              doc: """
+              Defines a message to indicate that the option item is deprecated. \
+              The message will be displayed as a warning when passing the item.
+              """
+            ],
+            doc: [
+              type: {:or, [:string, {:in, [false]}]},
+              type_doc: "`t:String.t/0` or `false`",
+              doc: "The documentation for the option item."
+            ],
+            subsection: [
+              type: :string,
+              doc: "The title of separate subsection of the options' documentation"
+            ],
+            type_doc: [
+              type: {:or, [:string, {:in, [false]}]},
+              type_doc: "`t:String.t/0` or `false`",
+              doc: """
+              The type doc to use *in the documentation* for the option item. If `false`,
+              no type documentation is added to the item. If it's a string, it can be
+              anything. For example, you can use `"a list of PIDs"`, or you can use
+              a typespec reference that ExDoc can link to the type definition, such as
+              `` "`t:binary/0`" ``. You can use Markdown in this documentation. If the
+              `:type_doc` option is not present, NimbleOptions tries to produce a type
+              documentation automatically if it can do it unambiguously. For example,
+              if `type: :integer`, NimbleOptions will use `t:integer/0` as the
+              auto-generated type doc.
+              """
+            ],
+            type_spec: [
+              type: :any,
+              type_doc: "`t:Macro.t/0`",
+              doc: """
+              The quoted spec to use *in the typespec* for the option item. You should use this
+              when the auto-generated spec is not specific enough. For example, if you are performing
+              custom validation on an option (with the `{:custom, ...}` type), then the
+              generated type spec for that option will always be `t:term/0`, but you can use
+              this option to customize that. The value for this option **must** be a quoted Elixir
+              term. For example, if you have an `:exception` option that is validated with a
+              `{:custom, ...}` type (based on `is_exception/1`), you can override the type
+              spec for that option to be `quote(do: Exception.t())`. *Available since v1.1.0*.
+              """
+            ]
+          ]}
+     ]}
   ]
 
   @moduledoc """
@@ -293,29 +299,7 @@ defmodule NimbleOptions do
   supported.
   """
 
-  alias NimbleOptions.ValidationError
-
   defstruct schema: []
-
-  @basic_types [
-    :any,
-    :keyword_list,
-    :non_empty_keyword_list,
-    :map,
-    :atom,
-    :integer,
-    :non_neg_integer,
-    :pos_integer,
-    :float,
-    :mfa,
-    :mod_arg,
-    :string,
-    :boolean,
-    :timeout,
-    :pid,
-    :reference,
-    nil
-  ]
 
   @typedoc """
   A schema.
@@ -332,44 +316,11 @@ defmodule NimbleOptions do
   """
   @type t() :: %__MODULE__{schema: schema()}
 
-  @doc """
-  Validates the given `options` with the given `schema`.
-
-  See the module documentation for what a `schema` is.
-
-  If the validation is successful, this function returns `{:ok, validated_options}`
-  where `validated_options` is a keyword list. If the validation fails, this
-  function returns `{:error, validation_error}` where `validation_error` is a
-  `NimbleOptions.ValidationError` struct explaining what's wrong with the options.
-  You can use `raise/1` with that struct or `Exception.message/1` to turn it into a string.
-  """
-  @spec validate(keyword() | map(), schema() | t()) ::
-          {:ok, validated_options :: keyword() | map()} | {:error, ValidationError.t()}
-
-  def validate(options, %NimbleOptions{schema: schema}) do
-    validate_options_with_schema(options, schema)
-  end
-
-  def validate(options, schema) when (is_list(options) or is_map(options)) and is_list(schema) do
-    validate(options, new!(schema))
-  end
+  @type options() :: keyword() | map()
+  @type validated_options() :: keyword() | map()
 
   @doc """
-  Validates the given `options` with the given `schema` and raises if they're not valid.
-
-  This function behaves exactly like `validate/2`, but returns the options directly
-  if they're valid or raises a `NimbleOptions.ValidationError` exception otherwise.
-  """
-  @spec validate!(keyword() | map(), schema() | t()) :: validated_options :: keyword() | map()
-  def validate!(options, schema) do
-    case validate(options, schema) do
-      {:ok, options} -> options
-      {:error, %ValidationError{} = error} -> raise error
-    end
-  end
-
-  @doc """
-  Validates the given `schema` and returns a wrapped schema to be used with `validate/2`.
+  Validates the given `schema` and returns a `%NimbleOptions{}` to be used with `validate/2`.
 
   If the given schema is not valid, raises a `NimbleOptions.ValidationError`.
   """
@@ -380,8 +331,46 @@ defmodule NimbleOptions do
         %NimbleOptions{schema: validated_schema}
 
       {:error, %ValidationError{} = error} ->
+        IO.inspect(error)
+
         raise ArgumentError,
               "invalid NimbleOptions schema. Reason: #{Exception.message(error)}"
+    end
+  end
+
+  @doc """
+  Validates the given `options` with the given `schema`.
+
+  See the module documentation for what a `schema` is.
+
+  If the validation is successful, this function returns `{:ok, validated_options}`:
+
+    * if the `options` is a keyword list, then `validated_options` is a keyword list.
+    * if the `options` is a map, then `validated_options` is a map.
+
+  If the validation fails, this function returns `{:error, validation_error}` where
+  `validation_error` is a `NimbleOptions.ValidationError` struct explaining what's
+  wrong with the options. You can use `raise/1` with that struct or `Exception.message/1`
+  to turn it into a string.
+  """
+  @spec validate(options(), t()) :: {:ok, validated_options()} | {:error, ValidationError.t()}
+  def validate(options, %NimbleOptions{schema: schema})
+      when is_list(options) or is_map(options) do
+    validate_options_with_schema(options, schema)
+  end
+
+  @doc """
+  Validates the given `options` with the given `schema` and raises if they're not valid.
+
+  This function behaves exactly like `validate/2`, but returns the options directly
+  if they're valid or raises a `NimbleOptions.ValidationError` exception otherwise.
+  """
+  @spec validate!(options(), t()) :: validated_options()
+  def validate!(options, %NimbleOptions{} = co_struct)
+      when is_list(options) or is_map(options) do
+    case validate(options, co_struct) do
+      {:ok, options} -> options
+      {:error, %ValidationError{} = error} -> raise error
     end
   end
 
@@ -492,28 +481,28 @@ defmodule NimbleOptions do
     @options_schema
   end
 
-  defp validate_options_with_schema(opts, schema) do
-    validate_options_with_schema_and_path(opts, schema, _path = [])
+  defp validate_options_with_schema(options, schema) do
+    validate_options_with_schema_and_path(options, schema, _path = [])
   end
 
-  defp validate_options_with_schema_and_path(opts, fun, path) when is_function(fun) do
-    validate_options_with_schema_and_path(opts, fun.(), path)
+  defp validate_options_with_schema_and_path(options, fun, path) when is_function(fun) do
+    validate_options_with_schema_and_path(options, fun.(), path)
   end
 
-  defp validate_options_with_schema_and_path(opts, schema, path) when is_map(opts) do
-    list_opts = Map.to_list(opts)
+  defp validate_options_with_schema_and_path(options, schema, path) when is_map(options) do
+    options = Map.to_list(options)
 
-    case validate_options_with_schema_and_path(list_opts, schema, path) do
-      {:ok, validated_list_opts} -> {:ok, Map.new(validated_list_opts)}
+    case validate_options_with_schema_and_path(options, schema, path) do
+      {:ok, validated_options} -> {:ok, Map.new(validated_options)}
       error -> error
     end
   end
 
-  defp validate_options_with_schema_and_path(opts, schema, path) when is_list(opts) do
-    schema = expand_star_to_option_keys(schema, opts)
+  defp validate_options_with_schema_and_path(options, schema, path) when is_list(options) do
+    schema = expand_star_to_option_keys(schema, options)
 
-    with :ok <- validate_unknown_options(opts, schema),
-         {:ok, options} <- validate_options(opts, schema) do
+    with :ok <- validate_unknown_options(options, schema),
+         {:ok, options} <- validate_options(options, schema) do
       {:ok, options}
     else
       {:error, %ValidationError{} = error} ->
@@ -521,10 +510,17 @@ defmodule NimbleOptions do
     end
   end
 
-  defp validate_unknown_options(opts, schema) do
-    valid_opts = Keyword.keys(schema)
+  defp expand_star_to_option_keys(schema, options) do
+    case schema[:*] do
+      nil -> schema
+      schema -> Enum.map(options, fn {k, _} -> {k, schema} end)
+    end
+  end
 
-    case Keyword.keys(opts) -- valid_opts do
+  defp validate_unknown_options(options, schema) do
+    valid_option_keys = Keyword.keys(schema)
+
+    case Keyword.keys(options) -- valid_option_keys do
       [] ->
         :ok
 
@@ -532,71 +528,66 @@ defmodule NimbleOptions do
         error_tuple(
           keys,
           nil,
-          "unknown options #{inspect(keys)}, valid options are: #{inspect(valid_opts)}"
+          "unknown options #{inspect(keys)}, valid options are: #{inspect(valid_option_keys)}"
         )
     end
   end
 
-  defp validate_options(opts, schema) do
-    orig_opts = opts
+  defp validate_options(options, schema) do
+    orig_options = options
 
-    case Enum.reduce_while(schema, {opts, orig_opts}, &reduce_options/2) do
+    case Enum.reduce_while(schema, {options, orig_options}, &reduce_options/2) do
       {:error, %ValidationError{}} = result -> result
-      {opts, _orig_opts} -> {:ok, opts}
+      {options, _orig_options} -> {:ok, options}
     end
   end
 
-  defp reduce_options({key, schema_opts}, {opts, orig_opts}) do
-    case validate_option({opts, orig_opts}, key, schema_opts) do
+  defp reduce_options({key, schema}, {options, orig_options}) do
+    case validate_option({options, orig_options}, key, schema) do
       {:error, %ValidationError{}} = result ->
         {:halt, result}
 
       {:ok, value} ->
-        opts = Keyword.update(opts, key, value, fn _ -> value end)
-        {:cont, {opts, orig_opts}}
+        options = Keyword.update(options, key, value, fn _ -> value end)
+        {:cont, {options, orig_options}}
 
       :no_value ->
-        if Keyword.has_key?(schema_opts, :default) do
-          opts_with_default = Keyword.put(opts, key, schema_opts[:default])
-          reduce_options({key, schema_opts}, {opts_with_default, orig_opts})
+        if Keyword.has_key?(schema, :default) do
+          options = Keyword.put(options, key, schema[:default])
+          reduce_options({key, schema}, {options, orig_options})
         else
-          {:cont, {opts, orig_opts}}
+          {:cont, {options, orig_options}}
         end
     end
   end
 
-  defp validate_option({opts, orig_opts}, key, schema) do
+  defp validate_option({options, orig_options}, key, schema) do
     with {:ok, value} <-
-           validate_value({opts, orig_opts}, key, schema),
+           validate_value({options, orig_options}, key, schema),
          {:ok, value} <-
            validate_type(schema[:type], key, value, Keyword.get(schema, :redact, false)) do
-      if nested_schema = schema[:keys] do
-        validate_options_with_schema_and_path(value, nested_schema, _path = [key])
-      else
-        {:ok, value}
-      end
+      {:ok, value}
     end
   end
 
-  defp validate_value({opts, orig_opts}, key, schema) do
-    cond do
-      Keyword.has_key?(opts, key) ->
-        if message = Keyword.get(schema, :deprecated) do
-          IO.warn("#{render_key(key)} is deprecated. " <> message)
-        end
+  defp validate_value({options, orig_options}, key, schema) do
+    if Keyword.has_key?(options, key) do
+      if message = Keyword.get(schema, :deprecated) do
+        IO.warn("#{render_key(key)} is deprecated. " <> message)
+      end
 
-        {:ok, opts[key]}
-
-      Keyword.get(schema, :required, false) ->
+      {:ok, options[key]}
+    else
+      if Keyword.get(schema, :required, false) do
         error_tuple(
           key,
           nil,
           "required #{render_key(key)} not found, received options: " <>
-            inspect(Keyword.keys(orig_opts))
+            inspect(Keyword.keys(orig_options))
         )
-
-      true ->
+      else
         :no_value
+      end
     end
   end
 
@@ -617,8 +608,24 @@ defmodule NimbleOptions do
     structured_error_tuple(key, value, "float", redact)
   end
 
+  defp validate_type(:string, key, value, redact) when not is_binary(value) do
+    structured_error_tuple(key, value, "string", redact)
+  end
+
   defp validate_type(:atom, key, value, redact) when not is_atom(value) do
     structured_error_tuple(key, value, "atom", redact)
+  end
+
+  defp validate_type(nil, key, value, redact) do
+    if is_nil(value) do
+      {:ok, value}
+    else
+      structured_error_tuple(key, value, "nil", redact)
+    end
+  end
+
+  defp validate_type(:boolean, key, value, redact) when not is_boolean(value) do
+    structured_error_tuple(key, value, "boolean", redact)
   end
 
   defp validate_type(:timeout, key, value, redact)
@@ -626,12 +633,29 @@ defmodule NimbleOptions do
     structured_error_tuple(key, value, "non-negative integer or :infinity", redact)
   end
 
-  defp validate_type(:string, key, value, redact) when not is_binary(value) do
-    structured_error_tuple(key, value, "string", redact)
+  defp validate_type(:pid, key, value, redact) when not is_pid(value) do
+    structured_error_tuple(key, value, "pid", redact)
   end
 
-  defp validate_type(:boolean, key, value, redact) when not is_boolean(value) do
-    structured_error_tuple(key, value, "boolean", redact)
+  defp validate_type(:reference, key, value, redact) when not is_reference(value) do
+    structured_error_tuple(key, value, "reference", inspect(value), redact)
+  end
+
+  defp validate_type(:mfa, _key, {mod, fun, args} = value, _redact)
+       when is_atom(mod) and is_atom(fun) and is_list(args) do
+    {:ok, value}
+  end
+
+  defp validate_type(:mfa, key, value, redact) when not is_nil(value) do
+    structured_error_tuple(key, value, "tuple {mod, fun, args}", inspect(value), redact)
+  end
+
+  defp validate_type(:mod_arg, _key, {mod, _arg} = value, _redact) when is_atom(mod) do
+    {:ok, value}
+  end
+
+  defp validate_type(:mod_arg, key, value, redact) do
+    structured_error_tuple(key, value, "tuple {mod, arg}", inspect(value), redact)
   end
 
   defp validate_type(:keyword_list, key, value, redact) do
@@ -639,6 +663,12 @@ defmodule NimbleOptions do
       {:ok, value}
     else
       structured_error_tuple(key, value, "keyword list", redact)
+    end
+  end
+
+  defp validate_type({:keyword_list = name, nested_schema}, key, value, redact) do
+    with {:ok, value} <- validate_type(name, key, value, redact) do
+      validate_options_with_schema_and_path(value, nested_schema, _path = [key])
     end
   end
 
@@ -650,8 +680,20 @@ defmodule NimbleOptions do
     end
   end
 
+  defp validate_type({:non_empty_keyword_list = name, nested_schema}, key, value, redact) do
+    with {:ok, value} <- validate_type(name, key, value, redact) do
+      validate_options_with_schema_and_path(value, nested_schema, _path = [key])
+    end
+  end
+
   defp validate_type(:map, key, value, redact) do
     validate_type({:map, :atom, :any}, key, value, redact)
+  end
+
+  defp validate_type({:map = name, nested_schema}, key, value, redact) do
+    with {:ok, value} <- validate_type(name, key, value, redact) do
+      validate_options_with_schema_and_path(value, nested_schema, _path = [key])
+    end
   end
 
   defp validate_type({:map, key_type, value_type}, key, map, redact) when is_map(map) do
@@ -677,130 +719,6 @@ defmodule NimbleOptions do
 
   defp validate_type({:map, _, _}, key, value, redact) do
     structured_error_tuple(key, value, "map", redact)
-  end
-
-  defp validate_type(:pid, _key, value, _redact) when is_pid(value) do
-    {:ok, value}
-  end
-
-  defp validate_type(:pid, key, value, redact) do
-    structured_error_tuple(key, value, "pid", redact)
-  end
-
-  defp validate_type(:reference, _key, value, _redact) when is_reference(value) do
-    {:ok, value}
-  end
-
-  defp validate_type(:reference, key, value, redact) do
-    structured_error_tuple(key, value, "reference", inspect(value), redact)
-  end
-
-  defp validate_type(:mfa, _key, {mod, fun, args} = value, _redact)
-       when is_atom(mod) and is_atom(fun) and is_list(args) do
-    {:ok, value}
-  end
-
-  defp validate_type(:mfa, key, value, redact) when not is_nil(value) do
-    structured_error_tuple(key, value, "tuple {mod, fun, args}", inspect(value), redact)
-  end
-
-  defp validate_type(:mod_arg, _key, {mod, _arg} = value, _redact) when is_atom(mod) do
-    {:ok, value}
-  end
-
-  defp validate_type(:mod_arg, key, value, redact) do
-    structured_error_tuple(key, value, "tuple {mod, arg}", inspect(value), redact)
-  end
-
-  defp validate_type({:fun, arity}, key, value, redact) do
-    if is_function(value) do
-      case :erlang.fun_info(value, :arity) do
-        {:arity, ^arity} ->
-          {:ok, value}
-
-        {:arity, fun_arity} ->
-          structured_error_tuple(
-            key,
-            value,
-            "function of arity #{arity}",
-            "function of arity #{inspect(fun_arity)}",
-            redact
-          )
-      end
-    else
-      structured_error_tuple(key, value, "function of arity #{arity}", redact)
-    end
-  end
-
-  defp validate_type(nil, key, value, redact) do
-    if is_nil(value) do
-      {:ok, value}
-    else
-      structured_error_tuple(key, value, "nil", redact)
-    end
-  end
-
-  defp validate_type({:custom, mod, fun, args}, key, value, _redact) do
-    case apply(mod, fun, [value | args]) do
-      {:ok, value} ->
-        {:ok, value}
-
-      {:error, message} when is_binary(message) ->
-        error_tuple(key, value, "invalid value for #{render_key(key)}: " <> message)
-
-      other ->
-        raise "custom validation function #{inspect(mod)}.#{fun}/#{length(args) + 1} " <>
-                "must return {:ok, value} or {:error, message}, got: #{inspect(other)}"
-    end
-  end
-
-  defp validate_type({:in, choices}, key, value, redact) do
-    if value in choices do
-      {:ok, value}
-    else
-      structured_error_tuple(key, value, "one of #{inspect(choices)}", redact)
-    end
-  end
-
-  defp validate_type({:or, subtypes}, key, value, redact) do
-    result =
-      Enum.reduce_while(subtypes, _errors = [], fn subtype, errors_acc ->
-        {subtype, nested_schema} =
-          case subtype do
-            {type, keys} when type in [:keyword_list, :non_empty_keyword_list, :map] ->
-              {type, keys}
-
-            other ->
-              {other, _nested_schema = nil}
-          end
-
-        case validate_type(subtype, key, value, redact) do
-          {:ok, value} when not is_nil(nested_schema) ->
-            case validate_options_with_schema_and_path(value, nested_schema, _path = [key]) do
-              {:ok, value} -> {:halt, {:ok, value}}
-              {:error, %ValidationError{} = error} -> {:cont, [error | errors_acc]}
-            end
-
-          {:ok, value} ->
-            {:halt, {:ok, value}}
-
-          {:error, %ValidationError{} = reason} ->
-            {:cont, [reason | errors_acc]}
-        end
-      end)
-
-    case result do
-      {:ok, value} ->
-        {:ok, value}
-
-      errors when is_list(errors) ->
-        message =
-          "expected #{render_key(key)} to match at least one given type, but didn't match " <>
-            "any. Here are the reasons why it didn't match each of the allowed types:\n\n" <>
-            Enum.map_join(errors, "\n", &("  * " <> Exception.message(&1)))
-
-        error_tuple(key, value, message)
-    end
   end
 
   defp validate_type({:list, subtype}, key, value, redact) when is_list(value) do
@@ -876,11 +794,94 @@ defmodule NimbleOptions do
     structured_error_tuple(key, value, "tuple", redact)
   end
 
+  defp validate_type({:fun, arity}, key, value, redact) do
+    if is_function(value) do
+      case :erlang.fun_info(value, :arity) do
+        {:arity, ^arity} ->
+          {:ok, value}
+
+        {:arity, fun_arity} ->
+          structured_error_tuple(
+            key,
+            value,
+            "function of arity #{arity}",
+            "function of arity #{inspect(fun_arity)}",
+            redact
+          )
+      end
+    else
+      structured_error_tuple(key, value, "function of arity #{arity}", redact)
+    end
+  end
+
   defp validate_type({:struct, struct_name}, key, value, redact) do
     if match?(%^struct_name{}, value) do
       {:ok, value}
     else
       structured_error_tuple(key, value, inspect(struct_name), redact)
+    end
+  end
+
+  defp validate_type({:custom, mod, fun, args}, key, value, _redact) do
+    case apply(mod, fun, [value | args]) do
+      {:ok, value} ->
+        {:ok, value}
+
+      {:error, message} when is_binary(message) ->
+        error_tuple(key, value, "invalid value for #{render_key(key)}: " <> message)
+
+      other ->
+        raise "custom validation function #{inspect(mod)}.#{fun}/#{length(args) + 1} " <>
+                "must return {:ok, value} or {:error, message}, got: #{inspect(other)}"
+    end
+  end
+
+  defp validate_type({:in, choices}, key, value, redact) do
+    if value in choices do
+      {:ok, value}
+    else
+      structured_error_tuple(key, value, "one of #{inspect(choices)}", redact)
+    end
+  end
+
+  defp validate_type({:or, subtypes}, key, value, redact) do
+    result =
+      Enum.reduce_while(subtypes, _errors = [], fn subtype, errors_acc ->
+        {subtype, nested_schema} =
+          case subtype do
+            {type, keys} when type in [:keyword_list, :non_empty_keyword_list, :map] ->
+              {type, keys}
+
+            other ->
+              {other, _nested_schema = nil}
+          end
+
+        case validate_type(subtype, key, value, redact) do
+          {:ok, value} when not is_nil(nested_schema) ->
+            case validate_options_with_schema_and_path(value, nested_schema, _path = [key]) do
+              {:ok, value} -> {:halt, {:ok, value}}
+              {:error, %ValidationError{} = error} -> {:cont, [error | errors_acc]}
+            end
+
+          {:ok, value} ->
+            {:halt, {:ok, value}}
+
+          {:error, %ValidationError{} = reason} ->
+            {:cont, [reason | errors_acc]}
+        end
+      end)
+
+    case result do
+      {:ok, value} ->
+        {:ok, value}
+
+      errors when is_list(errors) ->
+        message =
+          "expected #{render_key(key)} to match at least one given type, but didn't match " <>
+            "any. Here are the reasons why it didn't match each of the allowed types:\n\n" <>
+            Enum.map_join(errors, "\n", &("  * " <> Exception.message(&1)))
+
+        error_tuple(key, value, message)
     end
   end
 
@@ -890,124 +891,6 @@ defmodule NimbleOptions do
 
   defp keyword_list?(value) do
     is_list(value) and Enum.all?(value, &match?({key, _value} when is_atom(key), &1))
-  end
-
-  defp expand_star_to_option_keys(keys, opts) do
-    case keys[:*] do
-      nil ->
-        keys
-
-      schema_opts ->
-        Enum.map(opts, fn {k, _} -> {k, schema_opts} end)
-    end
-  end
-
-  defp available_types() do
-    types =
-      Enum.map(@basic_types, &inspect/1) ++
-        [
-          "{:fun, arity}",
-          "{:in, choices}",
-          "{:or, subtypes}",
-          "{:custom, mod, fun, args}",
-          "{:list, subtype}",
-          "{:tuple, list_of_subtypes}",
-          "{:map, key_type, value_type}",
-          "{:struct, struct_name}"
-        ]
-
-    Enum.join(types, ", ")
-  end
-
-  @doc false
-  def validate_type(value) when value in @basic_types do
-    {:ok, value}
-  end
-
-  def validate_type({:fun, arity} = value) when is_integer(arity) and arity >= 0 do
-    {:ok, value}
-  end
-
-  # "choices" here can be any enumerable so there's no easy and fast way to validate it.
-  def validate_type({:in, _choices} = value) do
-    {:ok, value}
-  end
-
-  def validate_type({:custom, mod, fun, args} = value)
-      when is_atom(mod) and is_atom(fun) and is_list(args) do
-    {:ok, value}
-  end
-
-  def validate_type({:or, subtypes} = value) when is_list(subtypes) do
-    Enum.reduce_while(subtypes, {:ok, value}, fn
-      {type, _keys}, acc
-      when type in [:keyword_list, :non_empty_keyword_list, :map] ->
-        {:cont, acc}
-
-      subtype, acc ->
-        case validate_type(subtype) do
-          {:ok, _value} -> {:cont, acc}
-          {:error, reason} -> {:halt, {:error, "invalid type given to :or type: #{reason}"}}
-        end
-    end)
-  end
-
-  # This is to support the special-cased "{:list, {:keyword_list, my_key: [type: ...]}}",
-  # like we do in the :or type.
-  def validate_type({:list, {type, keys}})
-      when type in [:keyword_list, :non_empty_keyword_list, :map] and is_list(keys) do
-    {:ok, {:list, {type, keys}}}
-  end
-
-  def validate_type({:list, subtype}) do
-    case validate_type(subtype) do
-      {:ok, validated_subtype} -> {:ok, {:list, validated_subtype}}
-      {:error, reason} -> {:error, "invalid subtype given to :list type: #{reason}"}
-    end
-  end
-
-  def validate_type({:tuple, tuple_def}) when is_list(tuple_def) do
-    validated_def =
-      Enum.map(tuple_def, fn subtype ->
-        case validate_type(subtype) do
-          {:ok, validated_subtype} -> validated_subtype
-          {:error, reason} -> throw({:error, "invalid subtype given to :tuple type: #{reason}"})
-        end
-      end)
-
-    {:ok, {:tuple, validated_def}}
-  catch
-    {:error, reason} -> {:error, reason}
-  end
-
-  def validate_type({:map, key_type, value_type}) do
-    valid_key_type =
-      case validate_type(key_type) do
-        {:ok, validated_key_type} -> validated_key_type
-        {:error, reason} -> throw({:error, "invalid key_type for :map type: #{reason}"})
-      end
-
-    valid_values_type =
-      case validate_type(value_type) do
-        {:ok, validated_values_type} -> validated_values_type
-        {:error, reason} -> throw({:error, "invalid value_type for :map type: #{reason}"})
-      end
-
-    {:ok, {:map, valid_key_type, valid_values_type}}
-  catch
-    {:error, reason} -> {:error, reason}
-  end
-
-  def validate_type({:struct, struct_name}) when is_atom(struct_name) do
-    {:ok, {:struct, struct_name}}
-  end
-
-  def validate_type({:struct, struct_name}) do
-    {:error, "invalid struct_name for :struct, expected atom, got #{inspect(struct_name)}"}
-  end
-
-  def validate_type(value) do
-    {:error, "unknown type #{inspect(value)}.\n\nAvailable types: #{available_types()}"}
   end
 
   defp error_tuple(key, value, message) do

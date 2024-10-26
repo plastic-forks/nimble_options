@@ -41,21 +41,36 @@ defmodule NimbleOptions.ValidationError do
 
     message <> suffix
   end
+end
 
-  defimpl Inspect do
-    import Inspect.Algebra
+defimpl Inspect, for: NimbleOptions.ValidationError do
+  import Inspect.Algebra
 
-    def inspect(%@for{redact: redacted?} = error, opts) do
-      fields =
-        error
-        |> Map.drop([:__struct__, :__exception__])
-        |> Map.update!(:value, &if(redacted?, do: "**redacted**", else: &1))
-        |> Enum.sort_by(fn {key, _val} -> key end)
-        |> Enum.map(fn {key, val} -> [string("#{key}:"), break(), to_doc(val, opts)] end)
-        |> Enum.intersperse([string(","), break()])
-        |> List.flatten()
+  @key_order [:message, :keys_path, :key, :value, :redact]
 
-      concat(["##{inspect(@for)}<"] ++ fields ++ [">"])
-    end
+  def inspect(%@for{} = error, opts) do
+    fields =
+      error
+      |> Map.drop([:__struct__, :__exception__])
+      |> Map.update!(:value, &if(error.redact, do: "**redacted**", else: &1))
+      |> Enum.sort_by(fn {k, _v} -> Enum.find_index(@key_order, &(k == &1)) end)
+
+    formated_fields =
+      fields
+      |> Enum.map(fn {key, val} ->
+        space("  #{key}:", to_doc(val, opts))
+      end)
+      |> Enum.intersperse([",", line()])
+      |> List.flatten()
+      |> concat()
+
+    [
+      "##{inspect(@for)}<",
+      formated_fields,
+      ">"
+    ]
+    |> Enum.intersperse(line())
+    |> List.flatten()
+    |> concat()
   end
 end
